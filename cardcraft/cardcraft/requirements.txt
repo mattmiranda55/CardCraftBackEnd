@@ -1,0 +1,10 @@
+djangorestframework
+django
+jwt
+psycopg2-binary
+python-dotenv
+openai
+dj-database-url
+django-cockroachdb==5.0
+pyopenssl
+PyMuPDF
