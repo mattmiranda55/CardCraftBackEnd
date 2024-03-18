@@ -8,3 +8,4 @@ dj-database-url
 django-cockroachdb==5.0
 pyopenssl
 PyMuPDF
+xhtml2pdf

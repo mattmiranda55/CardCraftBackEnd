@@ -6,7 +6,9 @@ from django.views.decorators.csrf import csrf_exempt
 import jwt
 import datetime
 import json
-import utils
+import tempfile
+import os
+from cardcraft import utils
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 
@@ -44,9 +46,21 @@ def loginUser(request):
     # frontend will store token into localstorage
     return JsonResponse({'jwt': token})    
 
-@api_view(['GET'])
+@api_view(['POST'])
 def makeCardSet(request):
-    pass
+    notes = request.FILES.get('notes')
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            for chunk in notes.chunks():
+                temp_file.write(chunk)
+    
+    file_path = temp_file.name
+
+    openAIResponse = utils.openAIRequest(file_path)
+
+    os.unlink(file_path)
+
+    return JsonResponse({'cardset': openAIResponse})
 
 @api_view(['POST'])
 def createUser(request):

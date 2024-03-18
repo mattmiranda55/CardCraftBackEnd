@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flash Cards</title>
+    <style>
+        
+        .card {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1 id="cardSetTitle">Card Set Title</h1>
+    </header>
+
+    <main id="flashCards">
+        <!-- Flash cards will added here -->
+    </main>
+
+    <footer>
+        <p>Username: <span id="username">JohnDoe</span></p>
+    </footer>
+
+    <!-- script for card addition -->
+    <script>
+        // Function to add a new card
+        function addCard(question, answer) {
+            var flashCards = document.getElementById('flashCards');
+            var card = document.createElement('div');
+            card.classList.add('card');
+            card.innerHTML = '<h3>Question:</h3><p>' + question + '</p><h3>Answer:</h3><p>' + answer + '</p>';
+            flashCards.appendChild(card);
+        }
+
+        // Exampl
+        addCard("What jail was the famous felon David Williford stored in?", "Wayne County Jail");
+        addCard("Who is Evan Phillips best friend", "ChadGPT");
+        
+    </script>
+</body>
+</html>
