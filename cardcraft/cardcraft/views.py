@@ -48,7 +48,13 @@ def loginUser(request):
 
 @api_view(['POST'])
 def makeCardSet(request):
+    data = json.loads(request.body)
+    token = data.get('jwt')
     notes = request.FILES.get('notes')
+
+    # Veifies if user is logged in
+    if not token:
+        return JsonResponse({"message": "You are not logged in!"}) 
 
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
             for chunk in notes.chunks():
@@ -125,8 +131,23 @@ def deleteCardSet(request):
     pass
 
 @api_view(['POST'])
-def updateCardSet(request):
-    pass
+def saveCardSet(request):
+    data = json.loads(request.body)
+    text = data.get('text')
+    token = data.get('jwt')
+    
+    try:
+        payload = jwt.decode(token, 'CC', algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({'message': 'Invalid web token'})
+    
+    user = User.objects.filter(id=payload['id']).first()
+
+    cardsetName = "name"
+
+    pdf_path = utils.buildCardSetFile(text, user.username, cardsetName)
+
+    return JsonResponse({'pdf': pdf_path})
 
 ########################################################
 #

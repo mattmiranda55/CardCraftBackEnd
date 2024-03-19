@@ -24,5 +24,5 @@ urlpatterns = [
     path("create-user/", views.createUser),
     path("cardset/", views.makeCardSet),
     path("cardset/delete/", views.deleteCardSet),
-    path("cardset/update/", views.updateCardSet)
+    path("cardset/save/", views.saveCardSet)
 ]
