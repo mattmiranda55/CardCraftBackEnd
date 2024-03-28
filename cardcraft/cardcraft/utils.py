@@ -4,7 +4,6 @@ from openai import OpenAI
 from xhtml2pdf import pisa 
 import re
 import json
-import pdfkit
 import os
 import tempfile
 

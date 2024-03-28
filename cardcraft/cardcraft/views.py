@@ -11,62 +11,62 @@ import os
 from cardcraft import utils
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
+from .serializers import UserSerializer
+
+
+
 
 @api_view(['POST'])
 @csrf_exempt
 def loginUser(request):   
-    # Get the request data as a dictionary
     data = json.loads(request.body)
     email = data.get('email')
     password = data.get('password')
     
-    # find user by email in request payload
     user = User.objects.filter(email=email).first()
     
-    # if user not found
     if user is None:
         return JsonResponse({'message': 'Invalid email'})
-    
-    # checking password match, check_passwords checks hashed passwords
     if not user.check_password(password):
         return JsonResponse({'message': 'Incorrect Password'})
     
-    # creating jwt token
     payload = {
         'id': user.id,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=120),
         'iat': datetime.datetime.utcnow()
     }
-    token = jwt.encode(payload, 'CC', algorithm='HS256')  # second param is secret key for hashing
+    token = jwt.encode(payload, 'CC', algorithm='HS256') 
 
-    # if succesful login 
     print("Login Successful")
-    
-    # returning jwt token
-    # frontend will store token into localstorage
-    return JsonResponse({'jwt': token})    
+    return JsonResponse({'jwt': token})  
 
+
+
+
+# Return info from authenticated user
 @api_view(['POST'])
-def makeCardSet(request):
-    data = json.loads(request.body)
-    token = data.get('jwt')
-    notes = request.FILES.get('notes')
+def userInfo(request):
 
-    # Veifies if user is logged in
-    if not token:
-        return JsonResponse({"message": "You are not logged in!"}) 
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        token = data.get('jwt')
 
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            for chunk in notes.chunks():
-                temp_file.write(chunk)
-    
-    file_path = temp_file.name
+        if not token:
+            return JsonResponse({'message': 'You are not signed in'})
 
-    openAIResponse = utils.openAIRequest(file_path)
+        try:
+            payload = jwt.decode(token, 'CC', algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return JsonResponse({'message': 'Invalid web token'})
 
-    os.unlink(file_path)
+        user = User.objects.filter(id=payload['id']).first()
+        user_serializer = UserSerializer(user)
 
-    return JsonResponse({'cardset': openAIResponse})
+        return Response(user_serializer.data)
+
+
+
+
 
 @api_view(['POST'])
 def createUser(request):
@@ -91,8 +91,14 @@ def createUser(request):
         last_name=last_name
     )
     
-    return JsonResponse({'id': new_user.id})
+    return JsonResponse({
+                        'id': new_user.id, 
+                         'message': 'User Created Succesfully'
+                        })
     
+
+
+
 
 @api_view(['POST'])
 def changePassword(request):
@@ -126,9 +132,41 @@ def changePassword(request):
     else:
         return JsonResponse({'message': 'Current password is incorrect'}, status=400)
 
+
+
+
+@api_view(['POST'])
+def makeCardSet(request):
+    data = json.loads(request.body)
+    token = data.get('jwt')
+    notes = request.FILES.get('notes')
+
+    # Veifies if user is logged in
+    if not token:
+        return JsonResponse({"message": "You are not logged in!"}) 
+
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            for chunk in notes.chunks():
+                temp_file.write(chunk)
+    
+    file_path = temp_file.name
+
+    openAIResponse = utils.openAIRequest(file_path)
+
+    os.unlink(file_path)
+
+    return JsonResponse({'cardset': openAIResponse})
+
+
+
+
 @api_view(['POST'])
 def deleteCardSet(request):
     pass
+
+
+
+
 
 @api_view(['POST'])
 def saveCardSet(request):
@@ -148,6 +186,11 @@ def saveCardSet(request):
     pdf_path = utils.buildCardSetFile(text, user.username, cardsetName)
 
     return JsonResponse({'pdf': pdf_path})
+
+
+
+
+
 
 ########################################################
 #

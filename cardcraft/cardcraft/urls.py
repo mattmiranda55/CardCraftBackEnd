@@ -21,8 +21,9 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("login/", views.loginUser),
     path("change-password/", views.changePassword),
-    path("create-user/", views.createUser),
+    path("createUser/", views.createUser),
     path("cardset/", views.makeCardSet),
     path("cardset/delete/", views.deleteCardSet),
-    path("cardset/save/", views.saveCardSet)
+    path("cardset/save/", views.saveCardSet),
+    path("userInfo/", views.userInfo)
 ]
