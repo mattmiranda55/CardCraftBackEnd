@@ -35,6 +35,9 @@ def openAIRequest(filepath):
 
     return cleaned_response
 
+
+
+
 def buildCardSetFile(text, username, cardsetName):
     with open("cardset.html", "r") as file:
         html_template = file.read()
