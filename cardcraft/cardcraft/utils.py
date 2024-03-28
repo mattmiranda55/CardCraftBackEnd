@@ -46,10 +46,10 @@ def buildCardSetFile(text, username, cardsetName):
     for key, value in flashcard_data.items():
         question = value['question']
         answer = value['answer']
-        flashcard_content += f"<div class=\"card\">\n\t<h3>Question:</h3><p>{question}</p><h3>Answer:</h3><p>{answer}</p>\n</div>\n"
+        flashcard_content += f"<div class=\"row\"><div class=\"question\"><h3>Question:</h3><p>{question}</p></div><div class=\"answer\"><h3>Answer:</h3><p>{answer}</p></div></div>"
 
     # Combine the HTML template and flashcard content
-    html_content = html_template.replace("<!-- Flash cards will added here -->", flashcard_content)
+    html_content = html_template.replace("<!-- Flash cards added here -->", flashcard_content)
     html_content = html_content.replace("<!-- send username in footer -->", f'<p>Username: {username}</p>')
     html_content = html_content.replace("<!-- send cardset name -->", f"<h1>{cardsetName}</h1>")
     print("html_content: " + html_content)

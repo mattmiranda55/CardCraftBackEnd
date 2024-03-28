@@ -1,29 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flash Cards</title>
     <style>
-        
-        .card {
+       /* Body background and font color */
+        body {
+            background-color: #6ab9f0; /* Malibu*/
+            color: #333; /* Dark gray */
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header styling */
+        header {
+            background-color: #03658c; /* bahama */
+            color: #3398db; /* curious */
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* Main content area */
+        main {
+            padding: 20px;
+        }
+
+        /* Flash card styling */
+        .question {
+            background-color: #fafafa; /* White */
             border: 1px solid #ccc;
+            color: #333; /* Dark gray */
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Soft shadow */
+            width: 45%; /* Adjusted width */
+            max-width: 400px; /* Maximum width for the card */
+            float: left; /* Float left to create grid */
+            text-align: left; /* Text align left */
+        }
+
+        .answer {
+            background-color: #fafafa; /* White */
+            border: 1px solid #ccc;
+            color: #333; /* Dark gray */
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Soft shadow */
+            width: 45%; /* Adjusted width */
+            max-width: 400px; /* Maximum width for the card */
+            float: right; /* Float right to create grid */
+            text-align: left; /* Text align left */
+        }
+
+        /* Footer styling */
+        footer {
+            background-color: #03658c; /* bahama */
+            color: #3398db; /* Curious */
+            text-align: center;
             padding: 10px;
-            margin-bottom: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
         }
     </style>
 </head>
 <body>
     <header>
-        <!-- send cardset name -->
+        <h1 id="cardSetTitle">Card Set Title</h1>
     </header>
 
     <main id="flashCards">
-        <!-- Flash cards will added here -->
-    </main>
-
+        <div class="flashcard-container">
+            <!-- Flash cards added here -->
+            <div class="row"><div class="question"><h3>Question:</h3><p>What jail was the famous felon David Williford stored in?</p></div><div class="answer"><h3>Answer:</h3><p>Wayne County Jail</p></div></div>
+        </div>
+        </main>
     <footer>
-        <!-- send username in footer -->
+        <p>Username: <span id="username">JohnDoe</span></p>
     </footer>
+
 </body>
 </html>
+
+
+
