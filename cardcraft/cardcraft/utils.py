@@ -33,7 +33,28 @@ def openAIRequest(filepath):
 
     cleaned_response = re.sub(r'[\n\t]', '', completion.choices[0].message.content)
 
-    return cleaned_response
+    # qa_pairs = {}
+    # for i, pair in enumerate(cleaned_response.split(';'), start=1):
+    #     question, answer = pair.split(':', 1)
+    #     qa_pairs[f'question-{i}'] = {
+    #         'question': question.strip(),
+    #         'answer': answer.strip()
+    #     }
+
+    # Regular expression to match the pattern in the text
+    pattern = re.compile(r'(\d+)\. Question: (.*?) Answer: (.*?)\.', re.DOTALL)
+    
+    qa_pairs = {}
+    
+    # Find all matches of the pattern
+    matches = pattern.findall(text)
+    
+    # Iterate through matches and populate the dictionary
+    for match in matches:
+        question_number, question, answer = match
+        qa_pairs[f"question-{question_number}"] = {"question": question.strip(), "answer": answer.strip()}
+    
+    return qa_pairs
 
 
 

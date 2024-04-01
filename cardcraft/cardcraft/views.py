@@ -137,8 +137,7 @@ def changePassword(request):
 
 @api_view(['POST'])
 def makeCardSet(request):
-    data = json.loads(request.body)
-    token = data.get('jwt')
+    token = request.POST.get('jwt')
     notes = request.FILES.get('notes')
 
     # Veifies if user is logged in
@@ -154,6 +153,8 @@ def makeCardSet(request):
     openAIResponse = utils.openAIRequest(file_path)
 
     os.unlink(file_path)
+
+    # response_json = json.loads(openAIResponse)
 
     return JsonResponse({'cardset': openAIResponse})
 
