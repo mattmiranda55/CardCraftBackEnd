@@ -140,8 +140,9 @@ def changePassword(request):
 @csrf_exempt
 @parser_classes((JSONParser, MultiPartParser))
 def makeCardSet(request):
-    token = request.data.get('jwt')  # Use DRF's request.data to handle JSON content
-    notes = request.FILES.get('notes')  # File data from the request
+    
+    token = request.data.get('jwt') 
+    notes = request.FILES.get('notes')  
 
     if not token:
         return JsonResponse({"message": "You are not logged in!"}) 
