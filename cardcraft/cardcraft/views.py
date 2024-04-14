@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 import jwt
@@ -136,23 +137,24 @@ def changePassword(request):
 
 
 @api_view(['POST'])
+@csrf_exempt
+@parser_classes((JSONParser, MultiPartParser))
 def makeCardSet(request):
-    data = json.loads(request.body)
-    token = data.get('jwt')
-    notes = request.FILES.get('notes')
+    token = request.data.get('jwt')  # Use DRF's request.data to handle JSON content
+    notes = request.FILES.get('notes')  # File data from the request
 
-    # Veifies if user is logged in
     if not token:
         return JsonResponse({"message": "You are not logged in!"}) 
 
+    if notes is None:
+        return JsonResponse({"message": "File is not provided!"})
+
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            for chunk in notes.chunks():
-                temp_file.write(chunk)
+        for chunk in notes.chunks():
+            temp_file.write(chunk)
     
     file_path = temp_file.name
-
     openAIResponse = utils.openAIRequest(file_path)
-
     os.unlink(file_path)
 
     return JsonResponse({'cardset': openAIResponse})
