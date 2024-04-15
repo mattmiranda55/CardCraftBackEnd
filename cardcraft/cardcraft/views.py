@@ -238,7 +238,7 @@ def makeCardSet(request):
             set_id=cardset
         )
 
-    return JsonResponse({'cardset': 'Successfully created card set and cards.'})
+    return JsonResponse({'cardset': cardset.id})
 
 
 
