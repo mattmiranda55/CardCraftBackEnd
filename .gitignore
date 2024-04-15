@@ -2,3 +2,5 @@ cardcraft/cardcraft/.env
 venv/
 davenv/
 test.html
+testing.json
+test notes.pdf

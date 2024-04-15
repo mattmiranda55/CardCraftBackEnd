@@ -6,7 +6,6 @@ class CardSets(models.Model):
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=250)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
-    file = models.FileField(upload_to="cardsets/", null=True, blank=True)
 
 class Card(models.Model):
     question = models.CharField(max_length=250)
