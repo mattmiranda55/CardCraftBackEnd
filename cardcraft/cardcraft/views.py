@@ -12,6 +12,7 @@ from cardcraft import utils
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 from .serializers import UserSerializer
+from .models import Card, CardSets
 
 
 
@@ -139,10 +140,17 @@ def changePassword(request):
 def makeCardSet(request):
     token = request.POST.get('jwt')
     notes = request.FILES.get('notes')
+    cardsetName = request.POST.get('name')
+    cardsetDescription = request.POST.get('description')
 
     # Veifies if user is logged in
     if not token:
         return JsonResponse({"message": "You are not logged in!"}) 
+    
+    try:
+        payload = jwt.decode(token, 'CC', algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({'message': 'Invalid web token'})
 
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
             for chunk in notes.chunks():
@@ -150,13 +158,29 @@ def makeCardSet(request):
     
     file_path = temp_file.name
 
-    openAIResponse = utils.openAIRequest(file_path)
+    qaPairs = utils.openAIRequest(file_path)
 
     os.unlink(file_path)
 
-    # response_json = json.loads(openAIResponse)
+    # get user object
+    user = User.objects.filter(id=payload['id']).first()
 
-    return JsonResponse({'cardset': openAIResponse})
+    # create Cardset object
+    cardset = CardSets.objects.create(
+        name = cardsetName,
+        description = cardsetDescription,
+        owner = user
+    )
+
+    # Save QA pairs in DB
+    for key, value in qaPairs.items():
+        Card.objects.create(
+            question = value['question'],
+            answer = value['answer'],
+            set_id = cardset.id
+        )
+
+    return JsonResponse({'cardset': cardset.id})
 
 
 
