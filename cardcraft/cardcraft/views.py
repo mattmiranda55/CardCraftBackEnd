@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.parsers import MultiPartParser, JSONParser
 from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 import jwt
@@ -12,7 +13,7 @@ from cardcraft import utils
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 from .serializers import UserSerializer
-from .models import Card, CardSets
+from .models import CardSets, Card
 
 
 
@@ -135,52 +136,112 @@ def changePassword(request):
 
 
 
+# TODO 
+# 
+# loop through cards and create Card objects usiong Card model 
+# create CardsetObject (may need to be done first)
+# Save to db
+#
+# @api_view(['POST'])
+# @csrf_exempt
+# @parser_classes((JSONParser, MultiPartParser))
+# def makeCardSet(request):
+
+#     token = request.data.get('jwt') 
+#     notes = request.FILES.get('notes')  
+
+#     if not token:
+#         return JsonResponse({"message": "You are not logged in!"}) 
+
+#     if notes is None:
+#         return JsonResponse({"message": "File is not provided!"})
+
+#     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+#         for chunk in notes.chunks():
+#             temp_file.write(chunk)
+    
+#     file_path = temp_file.name
+
+#     # json response
+#     openAIResponse = utils.openAIRequest(file_path)
+
+#     # TODO 
+#     # loop through cards and create Card objects usiong Card model 
+#     # create CardsetObject (may need to be done first)
+
+#     os.unlink(file_path)
+#     return JsonResponse({'cardset': openAIResponse})
+
+
+
 
 @api_view(['POST'])
+@csrf_exempt
+@parser_classes((JSONParser, MultiPartParser))
 def makeCardSet(request):
-    token = request.POST.get('jwt')
-    notes = request.FILES.get('notes')
-    cardsetName = request.POST.get('name')
-    cardsetDescription = request.POST.get('description')
 
-    # Veifies if user is logged in
+    # TODO 
+    # get name and description
+    token = request.data.get('jwt') 
+    notes = request.FILES.get('notes')  
+    name = request.data.get('name')
+    description = request.data.get('description')
+
+
+    # validating jwt token
     if not token:
         return JsonResponse({"message": "You are not logged in!"}) 
-    
     try:
         payload = jwt.decode(token, 'CC', algorithms=['HS256'])
     except jwt.ExpiredSignatureError:
-        return JsonResponse({'message': 'Invalid web token'})
+        return JsonResponse({'message': 'Invalid web token'})  
+    
+    # find user by id, using jwt
+    user = User.objects.filter(id=payload['id']).first()
+
+    if user is None:
+        return JsonResponse({'message': 'User not found'})
+
+    if notes is None:
+        return JsonResponse({"message": "File is not provided!"})
+
 
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            for chunk in notes.chunks():
-                temp_file.write(chunk)
+        for chunk in notes.chunks():
+            temp_file.write(chunk)
     
     file_path = temp_file.name
 
-    qaPairs = utils.openAIRequest(file_path)
-
+    # Simulate OpenAI response processing
+    openAIResponse = utils.openAIRequest(file_path)
     os.unlink(file_path)
 
-    # get user object
-    user = User.objects.filter(id=payload['id']).first()
+    # connecting to current user 
 
-    # create Cardset object
+
+
+
+    # Create a new CardSet
     cardset = CardSets.objects.create(
-        name = cardsetName,
-        description = cardsetDescription,
-        owner = user
+        name=name, 
+        description=description,  
+        owner=user,  
     )
-
-    # Save QA pairs in DB
-    for key, value in qaPairs.items():
+    
+    # Loop through the cardset details in the response
+    for i in range(1, 21):  # Adjust this range based on the expected number of questions
+        question_key = f"question-{i}"
+        answer_key = f"answer-{i}"
         Card.objects.create(
-            question = value['question'],
-            answer = value['answer'],
-            set_id = cardset.id
+            question=openAIResponse[question_key],
+            answer=openAIResponse[answer_key],
+            set_id=cardset
         )
 
     return JsonResponse({'cardset': cardset.id})
+
+
+
 
 
 
