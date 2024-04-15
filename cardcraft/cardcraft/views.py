@@ -140,7 +140,7 @@ def changePassword(request):
 @csrf_exempt
 @parser_classes((JSONParser, MultiPartParser))
 def makeCardSet(request):
-    
+
     token = request.data.get('jwt') 
     notes = request.FILES.get('notes')  
 
@@ -159,6 +159,7 @@ def makeCardSet(request):
     os.unlink(file_path)
 
     return JsonResponse({'cardset': openAIResponse})
+
 
 
 
