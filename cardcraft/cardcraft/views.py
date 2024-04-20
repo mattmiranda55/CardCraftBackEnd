@@ -135,53 +135,11 @@ def changePassword(request):
         return JsonResponse({'message': 'Current password is incorrect'}, status=400)
 
 
-
-# TODO 
-# 
-# loop through cards and create Card objects usiong Card model 
-# create CardsetObject (may need to be done first)
-# Save to db
-#
-# @api_view(['POST'])
-# @csrf_exempt
-# @parser_classes((JSONParser, MultiPartParser))
-# def makeCardSet(request):
-
-#     token = request.data.get('jwt') 
-#     notes = request.FILES.get('notes')  
-
-#     if not token:
-#         return JsonResponse({"message": "You are not logged in!"}) 
-
-#     if notes is None:
-#         return JsonResponse({"message": "File is not provided!"})
-
-#     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-#         for chunk in notes.chunks():
-#             temp_file.write(chunk)
-    
-#     file_path = temp_file.name
-
-#     # json response
-#     openAIResponse = utils.openAIRequest(file_path)
-
-#     # TODO 
-#     # loop through cards and create Card objects usiong Card model 
-#     # create CardsetObject (may need to be done first)
-
-#     os.unlink(file_path)
-#     return JsonResponse({'cardset': openAIResponse})
-
-
-
-
 @api_view(['POST'])
 @csrf_exempt
 @parser_classes((JSONParser, MultiPartParser))
 def makeCardSet(request):
 
-    # TODO 
-    # get name and description
     token = request.data.get('jwt') 
     notes = request.FILES.get('notes')  
     name = request.data.get('name')
@@ -212,14 +170,8 @@ def makeCardSet(request):
     
     file_path = temp_file.name
 
-    # Simulate OpenAI response processing
     openAIResponse = utils.openAIRequest(file_path)
     os.unlink(file_path)
-
-    # connecting to current user 
-
-
-
 
     # Create a new CardSet
     cardset = CardSets.objects.create(
@@ -228,8 +180,10 @@ def makeCardSet(request):
         owner=user,  
     )
     
+    cardsetLen = json.loads(openAIResponse)
+
     # Loop through the cardset details in the response
-    for i in range(1, 21):  # Adjust this range based on the expected number of questions
+    for i in range(1, len(cardsetLen)):  # Adjust this range based on the expected number of questions
         question_key = f"question-{i}"
         answer_key = f"answer-{i}"
         Card.objects.create(
@@ -238,20 +192,24 @@ def makeCardSet(request):
             set_id=cardset
         )
 
-    return JsonResponse({'cardset': cardset.id})
-
-
-
-
-
+    return JsonResponse({'cardset': openAIResponse})
 
 
 @api_view(['POST'])
 def deleteCardSet(request):
     pass
 
+@api_view(['POST'])
+def getCardSet(request):
+    cardsetID = request.data.get('id')
+    
+    cards = Card.objects.filter(set_id=cardsetID)
+    result = {}
+    for index, card in enumerate(cards, start=1):
+        result[f'question-{index}'] = card.question
+        result[f'answer-{index}'] = card.answer
 
-
+    return JsonResponse({'cardset': result})
 
 
 @api_view(['POST'])

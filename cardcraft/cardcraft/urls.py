@@ -25,5 +25,6 @@ urlpatterns = [
     path("cardset/", views.makeCardSet),
     path("cardset/delete/", views.deleteCardSet),
     path("cardset/save/", views.saveCardSet),
-    path("userInfo/", views.userInfo)
+    path("userInfo/", views.userInfo),
+    path("cardset/get/", views.getCardSet)
 ]
