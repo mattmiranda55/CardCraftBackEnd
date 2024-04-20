@@ -195,14 +195,20 @@ def makeCardSet(request):
     return JsonResponse({'cardset': openAIResponse})
 
 
-@api_view(['POST'])
+@api_view(['DELETE'])
 def deleteCardSet(request):
-    pass
+    cardsetID = request.data.get('id')
+
+    cardset = CardSets.objects.filter(id = cardsetID)
+
+    cardset.delete()
+
+    return JsonResponse({'message': 'CardSet Deleted Successfully'})
 
 @api_view(['POST'])
 def getCardSet(request):
     cardsetID = request.data.get('id')
-    
+
     cards = Card.objects.filter(set_id=cardsetID)
     result = {}
     for index, card in enumerate(cards, start=1):
