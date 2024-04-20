@@ -134,56 +134,53 @@ def changePassword(request):
     else:
         return JsonResponse({'message': 'Current password is incorrect'}, status=400)
 
-
 @api_view(['POST'])
 @csrf_exempt
 @parser_classes((JSONParser, MultiPartParser))
 def makeCardSet(request):
-
-    token = request.data.get('jwt') 
-    notes = request.FILES.get('notes')  
+    token = request.data.get('jwt')
+    notes = request.FILES.get('notes')
     name = request.data.get('name')
     description = request.data.get('description')
 
-
     # validating jwt token
     if not token:
-        return JsonResponse({"message": "You are not logged in!"}) 
+        return JsonResponse({"message": "You are not logged in!"})
     try:
         payload = jwt.decode(token, 'CC', algorithms=['HS256'])
     except jwt.ExpiredSignatureError:
-        return JsonResponse({'message': 'Invalid web token'})  
-    
-    # find user by id, using jwt
-    user = User.objects.filter(id=payload['id']).first()
+        return JsonResponse({'message': 'Invalid web token'})
 
+    user = User.objects.filter(id=payload['id']).first()
     if user is None:
         return JsonResponse({'message': 'User not found'})
 
     if notes is None:
         return JsonResponse({"message": "File is not provided!"})
 
-
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         for chunk in notes.chunks():
             temp_file.write(chunk)
-    
-    file_path = temp_file.name
 
+    file_path = temp_file.name
     openAIResponse = utils.openAIRequest(file_path)
     os.unlink(file_path)
 
+    # Ensure openAIResponse is a dictionary
+    if isinstance(openAIResponse, str):
+        openAIResponse = json.loads(openAIResponse)
+
     # Create a new CardSet
     cardset = CardSets.objects.create(
-        name=name, 
-        description=description,  
-        owner=user,  
+        name=name,
+        description=description,
+        owner=user
     )
-    
-    cardsetLen = json.loads(openAIResponse)
 
-    # Loop through the cardset details in the response
-    for i in range(1, len(cardsetLen)):  # Adjust this range based on the expected number of questions
+    # Dynamically create cards based on the openAIResponse content
+    # Assuming the structure of openAIResponse has question-x and answer-x keys
+    i = 1
+    while f"question-{i}" in openAIResponse:
         question_key = f"question-{i}"
         answer_key = f"answer-{i}"
         Card.objects.create(
@@ -191,9 +188,9 @@ def makeCardSet(request):
             answer=openAIResponse[answer_key],
             set_id=cardset
         )
+        i += 1
 
-    return JsonResponse({'cardset': openAIResponse})
-
+    return JsonResponse({'cardset': cardset.id})
 
 @api_view(['DELETE'])
 def deleteCardSet(request):
