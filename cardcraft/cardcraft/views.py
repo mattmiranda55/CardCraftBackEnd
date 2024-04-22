@@ -15,9 +15,6 @@ from django.contrib.auth import authenticate
 from .serializers import UserSerializer
 from .models import CardSets, Card
 
-
-
-
 @api_view(['POST'])
 @csrf_exempt
 def loginUser(request):   
@@ -42,9 +39,6 @@ def loginUser(request):
     print("Login Successful")
     return JsonResponse({'jwt': token})  
 
-
-
-
 # Return info from authenticated user
 @api_view(['POST'])
 def userInfo(request):
@@ -65,10 +59,6 @@ def userInfo(request):
         user_serializer = UserSerializer(user)
 
         return Response(user_serializer.data)
-
-
-
-
 
 @api_view(['POST'])
 def createUser(request):
@@ -97,10 +87,6 @@ def createUser(request):
                         'id': new_user.id, 
                          'message': 'User Created Succesfully'
                         })
-    
-
-
-
 
 @api_view(['POST'])
 def changePassword(request):
@@ -178,7 +164,6 @@ def makeCardSet(request):
     )
 
     # Dynamically create cards based on the openAIResponse content
-    # Assuming the structure of openAIResponse has question-x and answer-x keys
     i = 1
     while f"question-{i}" in openAIResponse:
         question_key = f"question-{i}"
@@ -207,37 +192,41 @@ def getCardSet(request):
     cardsetID = request.data.get('id')
 
     cards = Card.objects.filter(set_id=cardsetID)
-    result = {}
+    cardset = {}
     for index, card in enumerate(cards, start=1):
-        result[f'question-{index}'] = card.question
-        result[f'answer-{index}'] = card.answer
+        cardset[f'question-{index}'] = card.question
+        cardset[f'answer-{index}'] = card.answer
 
-    return JsonResponse({'cardset': result})
+    return JsonResponse({'cardset': cardset})
 
+@api_view(['POST'])
+def getCardSetByID(request):
+    pass
 
 @api_view(['POST'])
 def saveCardSet(request):
     data = json.loads(request.body)
-    text = data.get('text')
     token = data.get('jwt')
+    cardsetID = data.get('id')
     
     try:
         payload = jwt.decode(token, 'CC', algorithms=['HS256'])
     except jwt.ExpiredSignatureError:
         return JsonResponse({'message': 'Invalid web token'})
     
+    cards = Card.objects.filter(set_id=cardsetID)
+    cardsetJSON = {}
+    for index, card in enumerate(cards, start=1):
+        cardsetJSON[f'question-{index}'] = card.question
+        cardsetJSON[f'answer-{index}'] = card.answer
+    
     user = User.objects.filter(id=payload['id']).first()
 
-    cardsetName = "name"
+    cardset = CardSets.objects.filter(id=cardsetID).first()
 
-    pdf_path = utils.buildCardSetFile(text, user.username, cardsetName)
+    pdf_path = utils.buildCardSetFile(cardsetJSON, user.username, cardset.name)
 
     return JsonResponse({'pdf': pdf_path})
-
-
-
-
-
 
 ########################################################
 #
@@ -251,7 +240,6 @@ def is_email_taken(email):
     except User.DoesNotExist:
         return False
     
-
 def is_username_taken(username):
     try:
         user = User.objects.get(username=username)
