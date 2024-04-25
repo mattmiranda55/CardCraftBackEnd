@@ -193,14 +193,16 @@ def getCardSet(request):
 
     cards = Card.objects.filter(set_id=cardsetID)
 
-    cardsetInfo = CardSets.objects.filter(id = cardsetID)
+    cardsetInfo = CardSets.objects.filter(id = cardsetID).first()
 
     cardset = {}
     for index, card in enumerate(cards, start=1):
         cardset[f'question-{index}'] = card.question
         cardset[f'answer-{index}'] = card.answer
 
-    return JsonResponse({'cardset': cardset, 'name': cardsetInfo.name, 'description': cardsetInfo.description})
+    serialized_data = CardSetsSerializer(cardsetInfo)
+
+    return JsonResponse({'cardset': cardset, 'name': serialized_data.data['name'], 'description': serialized_data.data['description']})
 
 @api_view(['POST'])
 def getCardSetsByUser(request):
