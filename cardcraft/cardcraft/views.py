@@ -12,7 +12,7 @@ import os
 from cardcraft import utils
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
-from .serializers import UserSerializer
+from .serializers import UserSerializer, CardSetsSerializer
 from .models import CardSets, Card
 
 @api_view(['POST'])
@@ -192,16 +192,35 @@ def getCardSet(request):
     cardsetID = request.data.get('id')
 
     cards = Card.objects.filter(set_id=cardsetID)
+
+    cardsetInfo = CardSets.objects.filter(id = cardsetID)
+
     cardset = {}
     for index, card in enumerate(cards, start=1):
         cardset[f'question-{index}'] = card.question
         cardset[f'answer-{index}'] = card.answer
 
-    return JsonResponse({'cardset': cardset})
+    return JsonResponse({'cardset': cardset, 'name': cardsetInfo.name, 'description': cardsetInfo.description})
 
 @api_view(['POST'])
-def getCardSetByID(request):
-    pass
+def getCardSetsByUser(request):
+    data = json.loads(request.body)
+    token = data.get('jwt')
+
+    if not token:
+        return JsonResponse({"message": "You are not logged in!"})
+    try:
+        payload = jwt.decode(token, 'CC', algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({'message': 'Invalid web token'})
+    
+    user = User.objects.filter(id=payload['id']).first()
+
+    cardsets = CardSets.objects.filter(owner = user)
+
+    cardsets = CardSetsSerializer(cardsets, many=True)
+
+    return Response({'cardsets': cardsets.data})
 
 @api_view(['POST'])
 def saveCardSet(request):
